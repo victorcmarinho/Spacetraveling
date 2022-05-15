@@ -34,6 +34,31 @@ interface HomeProps {
 const Home: React.FC<HomeProps> = ({ postsPagination }: HomeProps) => {
   const [posts, setPosts] = useState<PostPagination>(postsPagination);
 
+  async function loadMorePosts(): Promise<void> {
+    const response = await fetch(`${posts.next_page}`).then(data =>
+      data.json()
+    );
+
+    const postsResponseResults = response.results.map(post => ({
+      ...post,
+      first_publication_date: format(
+        new Date(post.first_publication_date),
+        'dd MMM yyyy',
+        {
+          locale: ptBR,
+        }
+      ),
+    }));
+
+    const newPosts = {
+      ...posts,
+      next_page: response.next_page,
+      results: [...posts.results, ...postsResponseResults],
+    };
+
+    setPosts(newPosts);
+  }
+
   return (
     <>
       <Head>
@@ -64,18 +89,11 @@ const Home: React.FC<HomeProps> = ({ postsPagination }: HomeProps) => {
               </Link>
             </article>
           ))}
-          {/* {posts.next_page && (
+          {posts.next_page && (
             <button type="button" onClick={loadMorePosts}>
               Carregar mais posts
             </button>
-          )} */}
-          {/* {preview && (
-            <aside className={commonStyles.exitPreviewButton}>
-              <Link href="/api/exit-preview">
-                <a>Sair do modo Preview</a>
-              </Link>
-            </aside>
-          )} */}
+          )}
         </section>
       </main>
     </>
